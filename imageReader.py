@@ -9,9 +9,7 @@ def binary(image, threshold_l=5):
     th_y = image.shape[1]//4
     mean = np.mean(image[th_x:3*th_x, th_y:3*th_y])
     std = np.std(image[th_x:3*th_x, th_y:3*th_y])
-    threshold_r = mean-0.85*std
-    # threshold_r = 67
-    # print(mean-0.85*std)
+    threshold_r = mean-0.78*std
     for i in range(image.shape[0]):
         for j in range(image.shape[1]):
             if i < th_x or i > 3*th_x or j < th_y or j > 3*th_y:
@@ -31,7 +29,7 @@ for i in range(10):
     img1 = cv2.medianBlur(img1, 7)
     img2 = binary(img1).astype(np.uint8)
     img2 = cv2.bitwise_not(img2)
-    # kernel = np.ones((5, 5), np.int8)
+    kernel = np.ones((5, 5), np.int8)
     # img2 = cv2.morphologyEx(img2, cv2.MORPH_CLOSE, kernel)
     # img2 = cv2.morphologyEx(img2, cv2.MORPH_OPEN, kernel)
     nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(cv2.bitwise_not(img2), connectivity=8)
@@ -44,16 +42,23 @@ for i in range(10):
         temp[output == sizes[j]+1] = 255
         temp = temp.reshape(img2.shape).astype(np.uint8)
         if max(temp[:, (img2.shape[1]//2)]) == 255:
-            im2, contours, hierarchy = cv2.findContours(temp, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            hull = [cv2.convexHull(contours[0], False)]
             drawing = np.zeros(img2.shape, np.int8)
-            temp1 = cv2.fillConvexPoly(drawing, hull[0], (255, 255, 255))
+            parts = 10
+            half_col = img2.shape[1]//parts
+            for h in range(parts):
+                im2, contours, hierarchy = cv2.findContours(temp[:, h*half_col:(h+1)*half_col], cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                if len(contours) != 0:
+                    for hu in range(len(contours)):
+                        hull = [cv2.convexHull(contours[hu], False, clockwise=False)]
+                        drawing[:, h*half_col:(h+1)*half_col] = cv2.fillConvexPoly(drawing[:, h*half_col:(h+1)*half_col], hull[0], (255, 255, 255))
             temp2 = np.zeros(img2.shape, np.uint8)
-            for row in range(temp1.shape[0]):
-                for col in range(temp1.shape[1]):
-                    if row < img2.shape[0]//4 or row > 3*img2.shape[0]//4 or col < img2.shape[1]//4 or col > 3*img2.shape[1]//4 or temp1[row][col] < 50:
+            for row in range(drawing.shape[0]):
+                for col in range(drawing.shape[1]):
+                    if row < img2.shape[0]//4 or row > 3*img2.shape[0]//4 or col < img2.shape[1]//4 or col > 3*img2.shape[1]//4 or drawing[row][col] < 50:
                         pass
                     else:
                         temp2[row][col] = 255
+            plt.imshow(temp2, cmap='gray')
+            plt.show()
             cv2.imwrite("results/masked_000{}.jpg".format(i), temp2)
             break
