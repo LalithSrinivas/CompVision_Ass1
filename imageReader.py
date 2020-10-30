@@ -4,7 +4,7 @@ import numpy as np
 
 
 def binary(image, threshold_l=5):
-    arr1 = np.ndarray(image.shape)
+    arr1 = np.zeros(image.shape, np.uint8)
     th_x = image.shape[0]//4
     th_y = image.shape[1]//4
     mean = np.mean(image[th_x:3*th_x, th_y:3*th_y])
@@ -13,18 +13,17 @@ def binary(image, threshold_l=5):
     for i in range(image.shape[0]):
         for j in range(image.shape[1]):
             if i < th_x or i > 3*th_x or j < th_y or j > 3*th_y:
-                arr1[i][j] = 0
                 continue
             if image[i][j] == 0:
                 arr1[i][j] = 255
             elif image[i][j] > threshold_r or image[i][j] < threshold_l:
-                arr1[i][j] = 0
+                continue
             else:
                 arr1[i][j] = 255
     return arr1
 
 
-for i in range(10):
+for i in range(1, 2):
     img1 = cv2.imread("val/img/000{}.jpg".format(i), flags=cv2.IMREAD_GRAYSCALE)
     img1 = cv2.medianBlur(img1, 7)
     img2 = binary(img1).astype(np.uint8)
