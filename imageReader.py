@@ -1,7 +1,7 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-
+from collections import Counter
 
 def binary(image, threshold_l=5):
     arr1 = np.zeros(image.shape, np.uint8)
@@ -9,7 +9,13 @@ def binary(image, threshold_l=5):
     th_y = image.shape[1]//4
     mean = np.mean(image[th_x:3*th_x, th_y:3*th_y])
     std = np.std(image[th_x:3*th_x, th_y:3*th_y])
-    threshold_r = mean-0.78*std
+    temp = image[th_x:3*th_x, th_y:3*th_y].ravel()
+    count = Counter(temp).most_common()
+    threshold_r = max(62, 0.75*count[1][0], mean-0.78*std)
+    if std > 50:
+        threshold_r = mean-0.78*std
+    if std < 35:
+        threshold_r = 0.75*count[1][0]
     for i in range(image.shape[0]):
         for j in range(image.shape[1]):
             if i < th_x or i > 3*th_x or j < th_y or j > 3*th_y:
@@ -23,7 +29,7 @@ def binary(image, threshold_l=5):
     return arr1
 
 
-for i in range(1, 2):
+for i in range(10):
     img1 = cv2.imread("val/img/000{}.jpg".format(i), flags=cv2.IMREAD_GRAYSCALE)
     img1 = cv2.medianBlur(img1, 7)
     img2 = binary(img1).astype(np.uint8)
@@ -57,7 +63,5 @@ for i in range(1, 2):
                         pass
                     else:
                         temp2[row][col] = 255
-            plt.imshow(temp2, cmap='gray')
-            plt.show()
             cv2.imwrite("results/masked_000{}.jpg".format(i), temp2)
             break
