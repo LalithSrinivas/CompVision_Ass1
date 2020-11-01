@@ -52,7 +52,7 @@ if __name__ == "__main__":
             temp = temp.reshape(img2.shape).astype(np.uint8)
             if max(temp[:, (img2.shape[1]//2)]) == 255:
                 drawing = np.zeros(img2.shape, np.int8)
-                parts = 10
+                parts = 7
                 half_col = img2.shape[1]//parts
                 for h in range(parts):
                     im2, contours, hierarchy = cv2.findContours(temp[:, h*half_col:(h+1)*half_col], cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -60,12 +60,12 @@ if __name__ == "__main__":
                         for hu in range(len(contours)):
                             hull = [cv2.convexHull(contours[hu], False, clockwise=False)]
                             drawing[:, h*half_col:(h+1)*half_col] = cv2.fillConvexPoly(drawing[:, h*half_col:(h+1)*half_col], hull[0], (255, 255, 255))
-                temp2 = np.zeros(img2.shape, np.uint8)
+                final = np.zeros(img2.shape, np.uint8)
                 for row in range(drawing.shape[0]):
                     for col in range(drawing.shape[1]):
                         if row < img2.shape[0]//4 or row > 3*img2.shape[0]//4 or col < img2.shape[1]//4 or col > 3*img2.shape[1]//4 or drawing[row][col] < 50:
                             pass
                         else:
-                            temp2[row][col] = 255
-                cv2.imwrite(args.det_path+"000{}.jpg".format(i), temp2)
+                            final[row][col] = 255
+                cv2.imwrite(args.det_path+"000{}.jpg".format(i), final)
                 break
